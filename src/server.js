@@ -39,13 +39,31 @@ function fetchUrl(url, onSuccess, onError) {
 }
 
 function finishResponseError(localRes, error) {
-  console.error(`Request error: ${e.message}`)
-  localRes.end(`Remote host returned error: ${e.message}`)
+  console.error(`Request error: ${error.message}`)
+  localRes.end(`Remote host returned error: ${error.message}`)
 }
 
 function finishResponseSuccess(localRes, remoteRes, body) {
   // TODO: parse body, replace grammar
-  // TODO: consider different return codes
   console.log(`Successfully recieved response, status code ${remoteRes.statusCode}`)
-  localRes.end(body)
+  localRes.statusCode = remoteRes.statusCode
+  for(var header in remoteRes.headers) {
+    var headerValue = remoteRes.headers[header]
+    if(header == 'Location')
+      headerValue = convertUrl(headerValue)
+    localRes.setHeader(header, headerValue)
+  }
+  localRes.end(convertHtmlBody(body))
+}
+
+function convertHtmlBody(body) {
+  // hyperlinks
+  return body.replace(/href="((http:\/\/|www)[^\'\"]+)/g, (href, url) => `href="${convertUrl(url)}`)
+}
+
+function convertUrl(sourceUrl) {
+  var url = Url.parse(sourceUrl)
+  var x = `http://localhost:1980${url.pathname}?host=${url.hostname}`
+  console.log(`converted url ${sourceUrl} to ${x}`)
+  return x
 }
