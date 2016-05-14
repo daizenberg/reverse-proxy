@@ -1,5 +1,7 @@
 import Http from 'http'
 import Url from 'url'
+//import JsDom from 'jsdom'
+import Parse from 'parse5'
 
 var server = new Http.Server();
 
@@ -15,7 +17,8 @@ server.on('request', (req, res) => {
 
   console.log(`Connecting to ${url.hostname}${url.path}`)
   fetchUrl(url,
-    (remoteRes, body) => finishResponseSuccess(res, remoteRes, body),
+    //(remoteRes, body) => finishResponseSuccess(res, remoteRes, body),
+    res,
     (error) => finishResponseError(res, error))
 })
 
@@ -30,11 +33,19 @@ function parseUrl(sourceUrl) {
   }
 }
 
-function fetchUrl(url, onSuccess, onError) {
+function fetchUrl(url, localRes, onError) {
   Http.get(url, (response) => {
-      var body = ''
+      console.log(`Got response, status ${response.statusCode}`)
+      var parser = new Parse.SAXParser()
+      parser.on('text', (t) => {
+        console.log(t)
+        //return t.replace(/ /g, '*')
+        return "***"
+      })
+      /*var body = ''
       response.on('data', (d) => body += d )
-      response.on('end', () => onSuccess(response, body))
+      response.on('end', () => onSuccess(response, body))*/
+      response.pipe(parser).pipe(localRes)
     }).on('error', (e) => onError(e))
 }
 
@@ -58,7 +69,12 @@ function finishResponseSuccess(localRes, remoteRes, body) {
 
 function convertHtmlBody(body) {
   // hyperlinks
-  return body.replace(/href="((http:\/\/|www)[^\'\"]+)/g, (href, url) => `href="${convertUrl(url)}`)
+  body = body.replace(/href="((http:\/\/|www)[^\'\"]+)/g, (href, url) => `href="${convertUrl(url)}`)
+
+  //var document = Parse.parse(body)
+  //body = Parse.serialize(document)
+
+  return body
 }
 
 function convertUrl(sourceUrl) {
