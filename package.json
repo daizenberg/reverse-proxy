@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "webpack && echo '\n\n>> Starting server <<' && node --debug ./build/bundle.js",
+    "start": "webpack && echo '\n\n>> Starting server <<' && node --debug ./build/bundle.js 1980",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
